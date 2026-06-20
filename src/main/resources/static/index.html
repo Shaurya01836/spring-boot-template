@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring Boot API Dashboard</title>
+  <meta name="description" content="Local status and interactive test console for Spring Boot microservice starter." />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --spring-green: #6db33f;
+      --spring-green-hover: #5b9e30;
+      --spring-green-light: #f2f9ed;
+      --border: #e2e8f0;
+      --console-bg: #0f172a;
+      --console-text: #f1f5f9;
+      --radius: 8px;
+      --transition: all 0.2s ease-in-out;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      background-color: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .brand svg { width: 28px; height: 28px; }
+    .brand span.light { font-weight: 300; color: var(--muted); }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--spring-green-light);
+      border: 1px solid rgba(109, 179, 63, 0.2);
+      color: var(--spring-green-hover);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--spring-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--spring-green);
+    }
+
+    main {
+      padding: 40px 0 60px;
+    }
+
+    .hero {
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 750px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Command Copy Block */
+    .command-box {
+      background-color: var(--console-bg);
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .command-text {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--console-text);
+    }
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+    }
+    .copy-btn:hover { color: #ffffff; background-color: rgba(255,255,255,0.1); }
+    .copy-btn svg { width: 16px; height: 16px; }
+
+    /* Endpoints Registry Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+      margin-top: 8px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      font-weight: 600;
+      color: var(--muted);
+      background-color: var(--bg);
+    }
+    .method-badge {
+      display: inline-block;
+      font-weight: 700;
+      font-size: 0.72rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background-color: var(--spring-green-light);
+      color: var(--spring-green-hover);
+    }
+    .path-text {
+      font-family: 'Fira Code', monospace;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* API Tester Console */
+    .console-input-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .console-select {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      background-color: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .console-select:focus {
+      border-color: var(--spring-green);
+    }
+    .btn-send {
+      background-color: var(--spring-green);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+    .btn-send:hover {
+      background-color: var(--spring-green-hover);
+    }
+    .console-output {
+      background-color: var(--console-bg);
+      border-radius: 6px;
+      padding: 16px;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .console-output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 8px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    .response-badge {
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+    }
+    .response-badge.success { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .response-badge.error { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .response-badge.pending { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .response-body {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #60a5fa;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background-color: var(--panel);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation Removed -->
+
+  <!-- Main Content Dashboard -->
+  <main class="container" style="padding-top: 60px;">
+    <section class="hero">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 12px;">
+        <h1>Spring Boot Starter Console</h1>
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          <span>Running on Port 8080</span>
+        </div>
+      </div>
+      <p>This is the landing console for your Spring Boot application template. Use the endpoints and request builder below to test and inspect REST API behavior locally.</p>
+    </section>
+
+    <div class="grid">
+      <!-- Left Column: Commands and Endpoints -->
+      <div class="grid-col">
+        
+        <!-- Run Command Block -->
+        <div class="card" style="margin-bottom: 24px;">
+          <h2 class="card-title">Quickstart Command</h2>
+          <div class="command-box">
+            <span class="command-text" id="command-run">./mvnw spring-boot:run</span>
+            <button class="copy-btn" onclick="copyToClipboard('command-run', 'copy-icon')" id="copy-btn" title="Copy to clipboard">
+              <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Endpoints Table -->
+        <div class="card">
+          <h2 class="card-title">Mapped REST Endpoints</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Path</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="method-badge">GET</span></td>
+                  <td><span class="path-text">/v1/api/health-check</span></td>
+                  <td>Basic server liveness health check</td>
+                </tr>
+                <tr>
+                  <td><span class="method-badge">GET</span></td>
+                  <td><span class="path-text">/v1/api/unmapped</span></td>
+                  <td>Triggers custom JSON error translation</td>
+                </tr>
+                <tr>
+                  <td><span class="method-badge">GET</span></td>
+                  <td><span class="path-text">/error</span></td>
+                  <td>Renders the default error HTML page</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Interactive Tester -->
+      <div class="grid-col">
+        <div class="card" style="height: 100%;">
+          <h2 class="card-title">Interactive API Playground</h2>
+          
+          <div class="console-input-bar">
+            <select class="console-select" id="console-select">
+              <option value="/v1/api/health-check">/v1/api/health-check</option>
+              <option value="/v1/api/unmapped-endpoint-demo">/v1/api/unmapped</option>
+              <option value="/error">/error</option>
+            </select>
+            <button class="btn-send" onclick="sendTestRequest()" id="btn-send-request">
+              Send
+              <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1.1em" width="1.1em" xmlns="http://www.w3.org/2000/svg">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+
+          <div class="console-output">
+            <div class="console-output-header">
+              <span>Response Console</span>
+              <span id="response-stats" class="response-badge">Time: --ms | Status: --</span>
+            </div>
+            <pre class="response-body" id="response-output">Select an endpoint and hit Send...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Removed -->
+
+  <!-- Script logic -->
+  <script>
+    // Copy command
+    function copyToClipboard(elementId, iconId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const icon = document.getElementById(iconId);
+        const originalContent = icon.innerHTML;
+        icon.innerHTML = '<path d="M20 6L9 17l-5-5"></path>';
+        setTimeout(() => {
+          icon.innerHTML = originalContent;
+        }, 2000);
+      });
+    }
+
+    // Send Test Request
+    function sendTestRequest() {
+      const select = document.getElementById('console-select');
+      const endpoint = select.value;
+      const responseStats = document.getElementById('response-stats');
+      const responseOutput = document.getElementById('response-output');
+      
+      responseStats.innerHTML = 'Time: fetching... | Status: PENDING';
+      responseStats.className = 'response-badge pending';
+      responseOutput.innerText = 'Connecting to ' + endpoint + '...';
+
+      const startTime = performance.now();
+
+      fetch(endpoint)
+        .then(response => {
+          const duration = Math.round(performance.now() - startTime);
+          const status = response.status;
+          const statusText = response.statusText || (status === 200 ? 'OK' : 'Error');
+          
+          responseStats.className = 'response-badge ' + (status === 200 ? 'success' : 'error');
+          responseStats.innerHTML = `Time: ${duration}ms | Status: ${status} ${statusText}`;
+
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            return response.json().then(json => {
+              responseOutput.style.color = '#34d399'; 
+              responseOutput.innerText = JSON.stringify(json, null, 2);
+            });
+          } else {
+            return response.text().then(text => {
+              responseOutput.style.color = '#e2e8f0'; 
+              responseOutput.innerText = text;
+            });
+          }
+        })
+        .catch(err => {
+          const duration = Math.round(performance.now() - startTime);
+          responseStats.className = 'response-badge error';
+          responseStats.innerHTML = `Time: ${duration}ms | Status: FAILED`;
+          responseOutput.style.color = '#ef4444'; 
+          responseOutput.innerText = 'Error executing request:\n' + err.message + '\n\nMake sure the local Spring Boot application is running on port 8080!';
+        });
+    }
+  </script>
+</body>
+</html>

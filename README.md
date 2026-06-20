@@ -13,6 +13,8 @@ This template is designed to help teams start new services with a sensible defau
 - JPA and Flyway support for persistence and schema evolution.
 - CORS configuration for common local frontend development ports.
 - A health-check endpoint for basic service verification.
+- A minimalist developer status dashboard at `/` when the app runs on port 8080.
+- Structured JSON error responses for unmapped API routes under `/v1/api`.
 - Testcontainers-based integration test setup.
 
 ## Why This Template Exists
@@ -128,6 +130,12 @@ The project includes a CORS configuration for common frontend development hosts:
 
 This is useful for React, Angular, and Vite-based frontend apps during local development.
 
+### Root Landing Page and Errors
+
+The template serves a minimalist developer dashboard at `/` so opening `http://localhost:8080` shows a clean API tester and endpoints registry instead of a blank root.
+
+Unknown API routes under `/v1/api` return a structured JSON payload with the status, message, and request path. Browser-style requests get a clean, minimal HTML error page.
+
 ## Health Check Endpoint
 
 The template exposes a basic health endpoint:
@@ -242,4 +250,4 @@ If you want to extend this template further, the next practical additions are:
 
 ## License
 
-Add your project license here if this template will be shared publicly.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
